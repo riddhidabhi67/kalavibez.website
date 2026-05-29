@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Package, Image, MessageSquare, Settings, BarChart2, Plus, Trash2, Edit2, X, Upload, Check, ArrowLeft, Star } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Package, Image, MessageSquare, Settings, BarChart2, Plus, Trash2, Edit2, X, Upload, Check, ArrowLeft, Star, Loader2 } from 'lucide-react';
 import { supabase, Product, GalleryItem, Testimonial, Category, ProductReview } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -30,6 +30,8 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   const [editProduct, setEditProduct] = useState<Partial<Product> | null>(null);
   const [productForm, setProductForm] = useState<typeof EMPTY_PRODUCT>({ ...EMPTY_PRODUCT });
   const [saved, setSaved] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [siteSettings, setSiteSettings] = useState<Record<string, string>>({});
   const [editTestimonial, setEditTestimonial] = useState<Partial<Testimonial> | null>(null);
   const [testimonialsLoading, setTestimonialsLoading] = useState(false);
@@ -141,6 +143,52 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     }
     setEditTestimonial(null);
     await loadData();
+  }
+
+  async function uploadImage(file: File): Promise<string | null> {
+    try {
+      setUploading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `products/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(filePath, file, { cacheControl: '3600', upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Failed to upload image. Please try again.');
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const newUrls: string[] = [];
+    for (const file of Array.from(files)) {
+      const url = await uploadImage(file);
+      if (url) newUrls.push(url);
+    }
+
+    if (newUrls.length > 0) {
+      setProductForm(p => ({ ...p, images: [...p.images, ...newUrls] }));
+    }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   }
 
   const TABS: { key: AdminTab; label: string; icon: React.ReactNode }[] = [
@@ -311,9 +359,42 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
 
                   <div className="col-span-2">
                     <label className="font-poppins text-xs text-warm-600 mb-1 block">Product Images (2-3 recommended)</label>
+
+                    {/* Upload button */}
+                    <div className="mb-3">
+                      <label className={`flex items-center gap-2 px-4 py-2.5 border-2 border-dashed cursor-pointer transition-all ${uploading ? 'border-warm-300 bg-cream-50' : 'border-champagne-300 hover:border-champagne-400 hover:bg-champagne-50'}`}>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/gif"
+                          multiple
+                          onChange={handleImageUpload}
+                          disabled={uploading}
+                          className="sr-only"
+                        />
+                        {uploading ? (
+                          <>
+                            <Loader2 size={16} className="text-warm-500 animate-spin" />
+                            <span className="font-poppins text-sm text-warm-500">Uploading...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload size={16} className="text-champagne-600" />
+                            <span className="font-poppins text-sm text-champagne-600">Click to upload images</span>
+                          </>
+                        )}
+                      </label>
+                      <p className="font-poppins text-[10px] text-warm-400 mt-1">Supported: JPG, PNG, WebP, GIF (max 5MB each). Select multiple files at once.</p>
+                    </div>
+
+                    {/* Or paste URLs */}
+                    <div className="relative mb-3">
+                      <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-cream-200" /></div>
+                      <div className="relative flex justify-center"><span className="bg-white px-3 font-poppins text-xs text-warm-400">or paste image URLs</span></div>
+                    </div>
                     <textarea
-                      rows={3}
-                      placeholder="Paste image URLs here, one per line or comma-separated:&#10;https://example.com/image1.jpg&#10;https://example.com/image2.jpg&#10;https://example.com/image3.jpg"
+                      rows={2}
+                      placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"
                       value={productForm.images.join('\n')}
                       onChange={e => setProductForm(p => ({
                         ...p,
@@ -321,17 +402,16 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                       }))}
                       className="input-luxury text-sm resize-none"
                     />
-                    <p className="font-poppins text-[10px] text-warm-400 mt-1">Use direct image links (Google Drive, Dropbox, or image hosting). Press Enter after each URL.</p>
 
                     {/* Image previews */}
                     {productForm.images.length > 0 && (
                       <div className="flex flex-wrap gap-2 mt-3">
                         {productForm.images.map((img, idx) => (
                           <div key={idx} className="relative group">
-                            <img src={img} alt={`Preview ${idx + 1}`} className="w-16 h-16 object-cover border border-cream-200" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                            <img src={img} alt={`Preview ${idx + 1}`} className="w-20 h-20 object-cover border border-cream-200" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                             <button
                               onClick={() => setProductForm(p => ({ ...p, images: p.images.filter((_, i) => i !== idx) }))}
-                              className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
                             >
                               ×
                             </button>
