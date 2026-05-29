@@ -1,0 +1,187 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Poppins', system-ui, sans-serif;
+    background-color: #FDFBF7;
+    color: #4F3D2B;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+}
+
+@layer components {
+  .btn-gold {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-champagne-500 to-champagne-400 text-white font-poppins font-medium text-sm tracking-wider rounded-none transition-all duration-300 hover:from-champagne-600 hover:to-champagne-500 hover:shadow-luxury active:scale-95;
+  }
+
+  .btn-outline-gold {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 border border-champagne-500 text-champagne-600 font-poppins font-medium text-sm tracking-wider rounded-none transition-all duration-300 hover:bg-champagne-500 hover:text-white active:scale-95;
+  }
+
+  .btn-dark {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-warm-800 text-cream-100 font-poppins font-medium text-sm tracking-wider rounded-none transition-all duration-300 hover:bg-warm-900 hover:shadow-luxury active:scale-95;
+  }
+
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-sm border border-cream-200 shadow-card;
+  }
+
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300 hover:shadow-card-hover hover:border-champagne-300 hover:-translate-y-1;
+  }
+
+  .section-title {
+    @apply font-playfair text-3xl md:text-4xl lg:text-5xl text-warm-800 leading-tight;
+  }
+
+  .section-subtitle {
+    @apply font-poppins text-warm-500 text-sm tracking-[0.2em] uppercase;
+  }
+
+  .gold-divider {
+    @apply w-16 h-px bg-gradient-to-r from-transparent via-champagne-400 to-transparent mx-auto;
+  }
+
+  .nav-link {
+    @apply font-poppins text-sm text-warm-600 hover:text-champagne-600 transition-colors duration-200 tracking-wide;
+  }
+
+  .input-luxury {
+    @apply w-full px-4 py-3 bg-cream-50 border border-cream-300 text-warm-800 font-poppins text-sm placeholder-warm-400 focus:outline-none focus:border-champagne-400 focus:ring-1 focus:ring-champagne-200 transition-all duration-200;
+  }
+
+  .product-card {
+    @apply relative bg-white overflow-hidden cursor-pointer transition-all duration-300;
+  }
+
+  .masonry-grid {
+    column-count: 2;
+    column-gap: 1rem;
+  }
+
+  @screen md {
+    .masonry-grid {
+      column-count: 3;
+    }
+  }
+
+  @screen lg {
+    .masonry-grid {
+      column-count: 4;
+    }
+  }
+
+  .masonry-item {
+    break-inside: avoid;
+    margin-bottom: 1rem;
+  }
+}
+
+@layer utilities {
+  .text-gradient-gold {
+    background: linear-gradient(135deg, #C49A2D, #E2C47E, #C49A2D);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .bg-luxury-gradient {
+    background: linear-gradient(135deg, #FAF6EE 0%, #F5EDD9 50%, #FAF6EE 100%);
+  }
+
+  .bg-dark-luxury {
+    background: linear-gradient(135deg, #321F12 0%, #4F3D2B 100%);
+  }
+
+  .border-gold-gradient {
+    border-image: linear-gradient(135deg, #C49A2D, #E2C47E) 1;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .writing-mode-vertical {
+    writing-mode: vertical-rl;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FAF6EE;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D4A843;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #C49A2D;
+}
+
+/* Animated underline for links */
+.animated-underline {
+  position: relative;
+}
+
+.animated-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: linear-gradient(90deg, #C49A2D, #E2C47E);
+  transition: width 0.3s ease;
+}
+
+.animated-underline:hover::after {
+  width: 100%;
+}
+
+/* Shimmer effect */
+.shimmer-bg {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0.6) 50%,
+    rgba(255,255,255,0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+/* Page transitions */
+.page-enter {
+  animation: fadeUp 0.5s ease-out;
+}
+
+/* Hero parallax */
+.parallax-hero {
+  transform: translateZ(0);
+  will-change: transform;
+}
